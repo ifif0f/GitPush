@@ -14,9 +14,9 @@ namespace WebGitPush.Models.News
 
         //public string date { get; set; } = string.Empty;
 
-        public string created_at { get; set; } = string.Empty;
+        public DateTime created_at { get; set; } = DateTime.Now;
 
-        public string published_at { get; set; } = string.Empty;
+        public DateTime published_at { get; set; } = DateTime.Now;
 
         //public string? expires_at { get; set; }
 
@@ -30,7 +30,7 @@ namespace WebGitPush.Models.News
 
         //public string? remote_id { get; set; }
 
-        //public bool is_external { get; set; }
+        public bool is_external { get; set; }
 
         //public object? targeting { get; set; }
     }

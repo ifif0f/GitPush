@@ -1,11 +1,12 @@
-﻿<!DOCTYPE html>
+﻿﻿
+<!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="~/css/Style.css" />
     <title>@ViewBag.Title</title>
 </head>
-<body>
+<body class="@(ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower() == "main" ? "main-page" : "")">
     @RenderBody()
 </body>
 </html>

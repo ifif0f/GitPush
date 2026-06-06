@@ -1,64 +1,76 @@
 ﻿using WebGitPush.Classes;
 using WebGitPush.Models.News;
+using WebGitPush.Models.Parking;
+using WebGitPush.Models.Storages;
 
 namespace WebGitPush.ViewModels
 {
     public class VMIndex
     {
-        private readonly ConnectionApi connectionApi;
-        public VMApp ViewModel { get; set; } = new();
-        public List<NewsItem> newsItems { get; set; } = new();
+        private readonly ConnectionApi _connectionApi;
 
-
-        public async Task OnGetAsync(int parkingBuildingId = 0, int storageBuildingId = 0)
+        public VMIndex()
         {
-            var parkingData = await connectionApi.GetParkingDataAsync();
-            var storageData = await connectionApi.GetStorageDataAsync();
-            var newsData = await connectionApi.GetNewsDataAsync();
+            _connectionApi = new ConnectionApi();
+        }
 
-            ViewModel.ParkingData = parkingData;
-            ViewModel.StorageData = storageData;
+        public VMApp ViewModel { get; set; } = new();
+        public List<NewsItem> NewsItems { get; set; } = new();
+        public string? ErrorMessage { get; set; }
 
-            if (parkingData?.data?.items != null)
+        public async Task LoadDataAsync(int parkingBuildingId = 0, int storageBuildingId = 0)
+        {
+            try
             {
-                foreach (var complex in parkingData.data.items)
+                var parkingData = await _connectionApi.GetParkingDataAsync();
+                var storageData = await _connectionApi.GetStorageDataAsync();
+                var newsData = await _connectionApi.GetNewsDataAsync();
+
+                ViewModel.ParkingData = parkingData;
+                ViewModel.StorageData = storageData;
+
+                if (parkingData?.data?.items != null)
                 {
-                    foreach (var building in complex.buildings)
+                    foreach (var complex in parkingData.data.items)
                     {
-                        ViewModel.ParkingBuildings.Add(new BuildingRef
+                        foreach (var building in complex.buildings)
                         {
-                            id = building.building_id,
-                            title = building.building_title
-                        });
+                            ViewModel.ParkingBuildings.Add(new BuildingRef
+                            {
+                                id = building.building_id,
+                                title = building.building_title
+                            });
+                        }
                     }
                 }
-            }
 
-            if (storageData?.data?.items != null)
-            {
-                foreach (var complex in storageData.data.items)
+                if (storageData?.data?.items != null)
                 {
-                    foreach (var building in complex.buildings)
+                    foreach (var complex in storageData.data.items)
                     {
-                        ViewModel.StorageBuildings.Add(new BuildingRef
+                        foreach (var building in complex.buildings)
                         {
-                            id = building.building_id,
-                            title = building.building_title
-                        });
+                            ViewModel.StorageBuildings.Add(new BuildingRef
+                            {
+                                id = building.building_id,
+                                title = building.building_title
+                            });
+                        }
                     }
                 }
+
+                ViewModel.SelectedParkingBuildingId = parkingBuildingId > 0 ? parkingBuildingId :
+                    ViewModel.ParkingBuildings.FirstOrDefault()?.id ?? 0;
+
+                ViewModel.SelectedStorageBuildingId = storageBuildingId > 0 ? storageBuildingId :
+                    ViewModel.StorageBuildings.FirstOrDefault()?.id ?? 0;
+
+                NewsItems = ProcessNews(newsData);
             }
-
-            ViewModel.SelectedParkingBuildingId = parkingBuildingId > 0 ? parkingBuildingId :
-                ViewModel.ParkingBuildings.FirstOrDefault()?.id ?? 0;
-
-            ViewModel.SelectedStorageBuildingId = storageBuildingId > 0 ? storageBuildingId :
-                ViewModel.StorageBuildings.FirstOrDefault()?.id ?? 0;
-
-            newsItems = ProcessNews(newsData);
-
-            //UpdateParkingDisplay();
-            //UpdateStorageDisplay();
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Ошибка загрузки данных: {ex.Message}";
+            }
         }
 
         private List<NewsItem> ProcessNews(NewsApiResponse? newsData, int maxCount = 6)
@@ -72,19 +84,72 @@ namespace WebGitPush.ViewModels
             {
                 if (news.is_external) continue;
 
-                newsList.Add(new NewsItem
-                {
-                    id = news.id,
-                    title = news.title,
-                    text = news.text,
-                    created_at = DateTime.Now,
-                    published_at = DateTime.Now,
-                    buildings = news.buildings.Select(b => b.id).ToList(),
-                    images = ""
-                });
+                newsList.Add(news);
             }
 
-            return newsList.OrderByDescending(n => n.DisplayDate).Take(maxCount).ToList();
+            return newsList
+                .OrderByDescending(n => n.published_at)
+                .Take(maxCount)
+                .ToList();
+        }
+
+        public int GetFreeParkingSpotsCount(int buildingId)
+        {
+            if (ViewModel.ParkingData?.data?.items == null) return 0;
+
+            int freeCount = 0;
+            foreach (var complex in ViewModel.ParkingData.data.items)
+            {
+                foreach (var building in complex.buildings)
+                {
+                    if (building.building_id == buildingId)
+                    {
+                        foreach (var zone in building.zones ?? new List<ParkingZone>())
+                        {
+                            foreach (var spot in zone.spots ?? new List<ParkingSpot>())
+                            {
+                                if (spot.status == "free") freeCount++;
+                            }
+                        }
+                    }
+                }
+            }
+            return freeCount;
+        }
+
+        public (int publicStatus, int unassigned, int privateStatus) GetStorageFullStats(int buildingId)
+        {
+            int publicCount = 0;
+            int unassignedCount = 0;
+            int privateCount = 0;
+
+            if (ViewModel.StorageData?.data?.items == null) return (0, 0, 0);
+
+            foreach (var complex in ViewModel.StorageData.data.items)
+            {
+                foreach (var building in complex.buildings)
+                {
+                    if (building.building_id == buildingId)
+                    {
+                        foreach (var room in building.storages ?? new List<StorageRoom>())
+                        {
+                            switch (room.assignment_type)
+                            {
+                                case "public":
+                                    publicCount++;
+                                    break;
+                                case "unassigned":
+                                    unassignedCount++;
+                                    break;
+                                case "private":
+                                    privateCount++;
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            return (publicCount, unassignedCount, privateCount);
         }
     }
 }

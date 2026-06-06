@@ -1,155 +1,36 @@
-﻿@using WebGitPush.ViewModels
-@model VMIndex
-
-@{
+﻿@{
     Layout = "_Layout";
     ViewBag.Title = "Главная";
 }
 
-<div class="container">
-    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-    {
-        <div class="error-message">@Model.ErrorMessage</div>
-    }
-
-    <div class="news-block">
-        <h2>Новости ЖК</h2>
-        @if (Model.NewsItems.Any())
-        {
-            <div class="news-scroll-container">
-                <div class="news-list">
-                    @foreach (var news in Model.NewsItems)
-                    {
-                        <div class="news-card">
-                            @if (news.images != null && news.images.Any())
-                            {
-                                <img src="@news.images[0]" alt="@news.title" class="news-image" />
-                            }
-                            <div class="news-content">
-                                <h3 class="news-title">@news.title</h3>
-                                <div class="news-text">
-                                    @Html.Raw(news.text)
-                                </div>
-                                <div class="news-date">@news.published_at</div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-        else
-        {
-            <p>Новостей пока нет</p>
-        }
-    </div>
-
-    <div class="info-grid">
-        <div class="info-card">
-            <h3>Парковка</h3>
-            @if (Model.ViewModel.ParkingBuildings.Any())
-            {
-                <form method="get" asp-action="Index">
-                    <select name="parkingBuildingId" onchange="this.form.submit()">
-                        @foreach (var building in Model.ViewModel.ParkingBuildings)
-                        {
-                            <option value="@building.id" selected="@(building.id == Model.ViewModel.SelectedParkingBuildingId)">
-                                @building.title
-                            </option>
-                        }
-                    </select>
-                    <input type="hidden" name="storageBuildingId" value="@Model.ViewModel.SelectedStorageBuildingId" />
-                </form>
-                <p>Свободно мест: @Model.GetFreeParkingSpotsCount(Model.ViewModel.SelectedParkingBuildingId)</p>
-            }
-            else
-            {
-                <p>Данные о парковках не загружены</p>
-            }
-        </div>
-
-        <div class="info-card">
-            <h3>Кладовые</h3>
-            @if (Model.ViewModel.StorageBuildings.Any())
-            {
-                <form method="get" asp-action="Index">
-                    <select name="storageBuildingId" onchange="this.form.submit()">
-                        @foreach (var building in Model.ViewModel.StorageBuildings)
-                        {
-                            <option value="@building.id" selected="@(building.id == Model.ViewModel.SelectedStorageBuildingId)">
-                                @building.title
-                            </option>
-                        }
-                    </select>
-                    <input type="hidden" name="parkingBuildingId" value="@Model.ViewModel.SelectedParkingBuildingId" />
-                </form>
-                var stats = Model.GetStorageStats(Model.ViewModel.SelectedStorageBuildingId);
-                <p>Общедоступные: @stats.available<br>Невыкупленные: @(stats.total - stats.available)</p>
-            }
-            else
-            {
-                <p>Данные о кладовых не загружены</p>
-            }
-        </div>
-
-        <div class="info-card">
-            <h3>Правила ЖК</h3>
-            <p>Со всеми правилами нашего ЖК вы можете ознакомиться в чате дома</p>
-        </div>
-
-        <div class="info-card">
-            <h3>График вывоза мусора</h3>
-            <p>Пн, Ср, Пт — 08:00<br>Сб — 10:00</p>
-        </div>
-    </div>
-
-    <div class="contacts-block">
-        <h3>Контакты аварийной службы</h3>
-        <p>8 (800) 555-35-35</p>
-    </div>
+<div>
+    <a href="/Window1">Телевизор_1</a>
 </div>
 
-<script>
-    (function() {
-        const container = document.querySelector('.news-scroll-container');
-        if (!container) return;
+<h2>Моя видеокамера</h2>
 
-        let isAutoScrolling = true;
-        let animationId = null;
-        let scrollPos = 0;
-        const speed = 0.1;
-
-        function step() {
-            if (!isAutoScrolling) return;
-
-            scrollPos += speed;
-
-            if (scrollPos >= container.scrollWidth - container.clientWidth) {
-                scrollPos = 0;
+@if (!ViewBag.IsRunning)
+{
+    <form method="post" action="/Main/StartCamera">
+        <label>Список камер:</label>
+        <select name="deviceName">
+            @if (ViewBag.DeviceList != null)
+            {
+                @foreach (var item in ViewBag.DeviceList)
+                {
+                    <option value="@item.Value">@item.Text</option>
+                }
             }
-
-            container.scrollLeft = scrollPos;
-            animationId = requestAnimationFrame(step);
-        }
-
-        function start() {
-            if (animationId) cancelAnimationFrame(animationId);
-            isAutoScrolling = true;
-            animationId = requestAnimationFrame(step);
-        }
-
-        function stop() {
-            isAutoScrolling = false;
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-        }
-
-        start();
-
-        container.addEventListener('mouseenter', stop);
-        container.addEventListener('mouseleave', start);
-        container.addEventListener('touchstart', stop);
-        container.addEventListener('touchend', start);
-    })();
-</script>
+        </select>
+        <br />
+        <input type="submit" value="Начать показ" />
+    </form>
+}
+else
+{
+    <form method="post" action="/Main/StopCamera">
+        <input type="submit" value="Остановить показ" />
+    </form>
+    <br />
+    <img src="/Main/Video" />
+}

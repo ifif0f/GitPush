@@ -1,33 +1,168 @@
-﻿@{
-    Layout = "_Layout";
-    ViewBag.Title = "Window1";
-}
+﻿@using WebGitPush.ViewModels
+@model VMIndex
 
 @{
-    <div class="container">
-        <div class="news-block">
-            <h2>Новости, объявления о продаже квартир</h2>
+    Layout = "_Layout";
+    ViewBag.Title = "Главная";
+}
+
+<div class="container">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="error-message">@Model.ErrorMessage</div>
+    }
+
+    <div class="news-block">
+        <h2>Новости ЖК</h2>
+        @if (Model.NewsItems.Any())
+        {
+            <div class="news-scroll-container">
+                <div class="news-list">
+                    @foreach (var news in Model.NewsItems)
+                    {
+                        <div class="news-card">
+                            @if (news.images != null && news.images.Any())
+                            {
+                                <img src="@news.images[0]" alt="@news.title" class="news-image" />
+                            }
+                            <div class="news-content">
+                                <h3 class="news-title">@news.title</h3>
+                                <div class="news-text">
+                                    @Html.Raw(news.text)
+                                </div>
+                                <div class="news-date">@news.published_at</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <p>Новостей пока нет</p>
+        }
+    </div>
+
+    <div class="info-grid">
+        <div class="two-columns">
+            <div class="column">
+                <div class="section-card">
+                    <h2 class="section-title">Парковки</h2>
+                    @if (Model.ViewModel.ParkingBuildings.Any())
+                    {
+                        <div class="buildings-list">
+                            @foreach (var building in Model.ViewModel.ParkingBuildings)
+                            {
+                                <div class="building-item">
+                                    <div class="building-title">@building.title</div>
+                                    <div class="building-stats">
+                                        <span class="stat-value">@Model.GetFreeParkingSpotsCount(building.id)</span>
+                                        <span class="stat-label">свободных мест</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Данные о парковках не загружены</p>
+                    }
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="section-card">
+                    <h2 class="section-title">Кладовые</h2>
+                    @if (Model.ViewModel.StorageBuildings.Any())
+                    {
+                        <div class="buildings-list">
+                            @foreach (var building in Model.ViewModel.StorageBuildings)
+                            {
+                                var stats = Model.GetStorageFullStats(building.id);
+                                <div class="building-item">
+                                    <div class="building-title">@building.title</div>
+                                    <div class="building-stats">
+                                        <div class="stat-row">
+                                            <span class="stat-value">@stats.publicStatus</span>
+                                            <span class="stat-label">общедоступных</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-value">@stats.unassigned</span>
+                                            <span class="stat-label">невыкупленных</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Данные о кладовых не загружены</p>
+                    }
+                </div>
+            </div>
         </div>
 
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>Парковка</h3>
-                <p>Свободно:</p>
-            </div>
-            <div class="info-card">
-                <h3>Кладовые</h3>
-                <p>Общедоступные:<br>Невыкупленные:</p>
-            </div>
-            <div class="info-card">
-                <h3>Правила ЖК</h3>
-            </div>
-            <div class="info-card">
-                <h3>График вывоза мусора</h3>
-            </div>
+        <div class="info-card">
+            <h3>Правила ЖК</h3>
+            <p>Со всеми правилами нашего ЖК вы можете ознакомиться в чате дома</p>
         </div>
 
-        <div class="contacts-block">
-            <h3>Контакты аварийной службы</h3>
+        <div class="info-card">
+            <h3>График вывоза мусора</h3>
+            <p>Пн, Ср, Пт — 08:00<br>Сб — 10:00</p>
         </div>
     </div>
-}
+
+
+    <div class="contacts-block">
+        <h3>Контакты аварийной службы</h3>
+        <p>8 (800) 555-35-35</p>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const container = document.querySelector('.news-scroll-container');
+        if (!container) return;
+
+        let isAutoScrolling = true;
+        let animationId = null;
+        let scrollPos = 0;
+        const speed = 0.1;
+
+        function step() {
+            if (!isAutoScrolling) return;
+
+            scrollPos += speed;
+
+            if (scrollPos >= container.scrollWidth - container.clientWidth) {
+                scrollPos = 0;
+            }
+
+            container.scrollLeft = scrollPos;
+            animationId = requestAnimationFrame(step);
+        }
+
+        function start() {
+            if (animationId) cancelAnimationFrame(animationId);
+            isAutoScrolling = true;
+            animationId = requestAnimationFrame(step);
+        }
+
+        function stop() {
+            isAutoScrolling = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        start();
+
+        container.addEventListener('mouseenter', stop);
+        container.addEventListener('mouseleave', start);
+        container.addEventListener('touchstart', stop);
+        container.addEventListener('touchend', start);
+    })();
+</script>

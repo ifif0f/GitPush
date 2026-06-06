@@ -1,17 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebGitPush.ViewModels;
 
 namespace WebGitPush.Controllers
 {
     public class Window1Controller : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int parkingBuildingId = 0, int storageBuildingId = 0)
         {
-            return View();
-        }
+            var vm = new VMIndex();
+            await vm.LoadDataAsync(parkingBuildingId, storageBuildingId);
 
-        public IActionResult List()
-        {
-            return View();
+            return View(vm);
         }
     }
 }

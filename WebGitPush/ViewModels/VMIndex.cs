@@ -117,13 +117,13 @@ namespace WebGitPush.ViewModels
             return freeCount;
         }
 
-        public (int publicStatus, int unassigned, int privateStatus) GetStorageFullStats(int buildingId)
+        public (int publicStatus, int unassigned) GetStorageFullStats(int buildingId)
         {
             int publicCount = 0;
             int unassignedCount = 0;
             int privateCount = 0;
 
-            if (ViewModel.StorageData?.data?.items == null) return (0, 0, 0);
+            if (ViewModel.StorageData?.data?.items == null) return (0, 0);
 
             foreach (var complex in ViewModel.StorageData.data.items)
             {
@@ -141,15 +141,12 @@ namespace WebGitPush.ViewModels
                                 case "unassigned":
                                     unassignedCount++;
                                     break;
-                                case "private":
-                                    privateCount++;
-                                    break;
                             }
                         }
                     }
                 }
             }
-            return (publicCount, unassignedCount, privateCount);
+            return (publicCount, unassignedCount);
         }
     }
 }

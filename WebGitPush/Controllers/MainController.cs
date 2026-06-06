@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
+using WebGitPush.ViewModels;
 using FilterInfo = AForge.Video.DirectShow.FilterInfo;
 
 namespace WebGitPush.Controllers

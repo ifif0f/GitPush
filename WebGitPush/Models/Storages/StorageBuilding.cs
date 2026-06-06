@@ -1,13 +1,13 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace WebGitPush.Models.Parking
+namespace WebGitPush.Models.Storages
 {
-    public class ParkingBuilding
+    public class StorageBuilding
     {
         public int building_id { get; set; }
 
         public string building_title { get; set; }
 
-        public List<ParkingZone> zones { get; set; }
+        public List<StorageRoom> storages { get; set; }
     }
 }

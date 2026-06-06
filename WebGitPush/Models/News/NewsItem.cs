@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace WebGitPush.Models
+namespace WebGitPush.Models.News
 {
     public class NewsItem
     {

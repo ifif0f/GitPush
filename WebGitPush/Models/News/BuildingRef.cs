@@ -1,4 +1,4 @@
-﻿namespace WebGitPush.Models
+﻿namespace WebGitPush.Models.News
 {
     public class BuildingRef
     {

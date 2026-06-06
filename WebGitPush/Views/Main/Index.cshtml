@@ -1,10 +1,36 @@
-﻿@{
-    Layout = "_Layout";
-    ViewBag.Title = "Главная";
+﻿﻿@{
+Layout = "_Layout";
+ViewBag.Title = "Главная";
 }
 
-@{
-    <div>
-        <a href="/Window1">Телевизор_1</a>
-    </div>
+<div>
+    <a href="/Window1">Телевизор_1</a>
+</div>
+
+<h2>Моя видеокамера</h2>
+
+@if (!ViewBag.IsRunning)
+{
+    <form method="post" action="/Main/StartCamera">
+        <label>Список камер:</label>
+        <select name="deviceName">
+            @if (ViewBag.DeviceList != null)
+            {
+                @foreach (var item in ViewBag.DeviceList)
+                {
+                    <option value="@item.Value">@item.Text</option>
+                }
+            }
+        </select>
+        <br />
+        <input type="submit" value="Начать показ" />
+    </form>
+}
+else
+{
+    <form method="post" action="/Main/StopCamera">
+        <input type="submit" value="Остановить показ" />
+    </form>
+    <br />
+    <img src="/Main/Video" />
 }

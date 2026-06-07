@@ -5,7 +5,7 @@
 <div class="camera-page-container">
     <a href="/Window1" class="nav-badge">Телевизор_1</a>
 
-    <h2 class="page-title">Моя видеокамера</h2>
+    <h2 class="page-title">Камеры видеонаблюдения</h2>
 
     @if (!ViewBag.IsRunning)
     {
@@ -19,10 +19,6 @@
                         {
                             <option value="@item.Value">@item.Text</option>
                         }
-                    }
-                    else
-                    {
-                        <option value="">Камеры не найдены</option>
                     }
                 </select>
                 <input type="submit" value="Начать показ" class="btn btn-start" />
@@ -42,6 +38,7 @@
         </div>
     }
 </div>
+
 <style>
     .camera-page-container {
         max-width: 800px;

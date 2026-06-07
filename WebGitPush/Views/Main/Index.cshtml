@@ -2,35 +2,159 @@
     Layout = "_Layout";
     ViewBag.Title = "Главная";
 }
+<div class="camera-page-container">
+    <a href="/Window1" class="nav-badge">Телевизор_1</a>
 
-<div>
-    <a href="/Window1">Телевизор_1</a>
+    <h2 class="page-title">Моя видеокамера</h2>
+
+    @if (!ViewBag.IsRunning)
+    {
+        <div class="form-container">
+            <form method="post" action="/Main/StartCamera">
+                <label for="deviceName" style="display: block; text-align: left; margin-bottom: 8px; font-weight: 500; color: #555;">Список камер:</label>
+                <select name="deviceName" id="deviceName" class="camera-select">
+                    @if (ViewBag.DeviceList != null)
+                    {
+                        @foreach (var item in ViewBag.DeviceList)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="">Камеры не найдены</option>
+                    }
+                </select>
+                <input type="submit" value="Начать показ" class="btn btn-start" />
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="form-container">
+            <form method="post" action="/Main/StopCamera">
+                <input type="submit" value="Остановить показ" class="btn btn-stop" />
+            </form>
+        </div>
+
+        <div class="video-wrapper">
+            <img src="/Main/Video" alt="Видео поток" class="video-stream" />
+        </div>
+    }
 </div>
+<style>
+    .camera-page-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-<h2>Моя видеокамера</h2>
+    .nav-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background-color: #f1f3f5;
+        color: #495057;
+        text-decoration: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+        margin-bottom: 20px;
+    }
 
-@if (!ViewBag.IsRunning)
-{
-    <form method="post" action="/Main/StartCamera">
-        <label>Список камер:</label>
-        <select name="deviceName">
-            @if (ViewBag.DeviceList != null)
-            {
-                @foreach (var item in ViewBag.DeviceList)
-                {
-                    <option value="@item.Value">@item.Text</option>
-                }
-            }
-        </select>
-        <br />
-        <input type="submit" value="Начать показ" />
-    </form>
-}
-else
-{
-    <form method="post" action="/Main/StopCamera">
-        <input type="submit" value="Остановить показ" />
-    </form>
-    <br />
-    <img src="/Main/Video" />
-}
+        .nav-badge:hover {
+            background-color: #e2e6ea;
+            color: #212529;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border-color: #ced4da;
+        }
+
+    .page-title {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .form-container {
+        max-width: 400px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .camera-select {
+        width: 100%;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        font-size: 16px;
+        color: #495057;
+        background-color: #fff;
+        transition: border-color 0.2s ease;
+        cursor: pointer;
+    }
+
+        .camera-select:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+    .btn {
+        width: 100%;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-start {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+        .btn-start:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+    .btn-stop {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-stop:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+    .video-wrapper {
+        margin-top: 30px;
+        text-align: center;
+        background-color: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .video-stream {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        min-height: 250px;
+    }
+</style>

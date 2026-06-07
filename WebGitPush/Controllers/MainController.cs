@@ -13,6 +13,8 @@ namespace WebGitPush.Controllers
     {
         private static VideoCaptureDevice videoSource;
         private static byte[] _bufImage = new byte[0];
+        private static CancellationTokenSource _cancellationTokenSource;
+        private static bool _isStopping = false;
 
         public IActionResult Index()
         {
@@ -34,28 +36,76 @@ namespace WebGitPush.Controllers
         [HttpPost]
         public IActionResult StartCamera(string deviceName)
         {
-            if (videoSource != null && videoSource.IsRunning)
+            try
             {
-                videoSource.Stop();
-                videoSource = null;
-            }
+                StopCameraSafely();
 
-            videoSource = new VideoCaptureDevice(deviceName);
-            videoSource.NewFrame += VideoSourceNewFrame;
-            videoSource.Start();
-            return RedirectToAction("Index");
+                _isStopping = false;
+                videoSource = new VideoCaptureDevice(deviceName);
+                videoSource.NewFrame += VideoSourceNewFrame;
+                videoSource.Start();
+
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return RedirectToAction("Index");
+            }
         }
 
         [HttpPost]
         public IActionResult StopCamera()
         {
-            if (videoSource != null && videoSource.IsRunning)
-            {
-                videoSource.Stop();
-                videoSource = null;
-            }
-            _bufImage = new byte[0];
+            StopCameraSafely();
             return RedirectToAction("Index");
+        }
+
+        private void StopCameraSafely()
+        {
+            try
+            {
+                _isStopping = true;
+                _cancellationTokenSource?.Cancel();
+
+                if (videoSource != null)
+                {
+                    try
+                    {
+                        if (videoSource.IsRunning)
+                        {
+                            videoSource.SignalToStop();
+
+                            int waitCount = 0;
+                            while (videoSource.IsRunning && waitCount < 50) // максимум 1 секунда
+                            {
+                                System.Threading.Thread.Sleep(20);
+                                waitCount++;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error stopping: {ex.Message}");
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            videoSource.NewFrame -= VideoSourceNewFrame;
+                        }
+                        catch { }
+
+                        videoSource = null;
+                    }
+                }
+
+                _bufImage = new byte[0];
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"StopCameraSafely error: {ex.Message}");
+            }
         }
 
         public async Task Video()
@@ -68,35 +118,60 @@ namespace WebGitPush.Controllers
 
             Response.ContentType = "multipart/x-mixed-replace; boundary=--myboundary";
             Response.Headers["Cache-Control"] = "no-cache";
+            Response.Headers["Connection"] = "keep-alive";
 
             var ae = new ASCIIEncoding();
+            _cancellationTokenSource = new CancellationTokenSource();
 
             try
             {
-                while (videoSource != null && videoSource.IsRunning)
+                while (videoSource != null && videoSource.IsRunning && !_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    if (_bufImage.Length > 0)
+                    if (_bufImage != null && _bufImage.Length > 0)
                     {
-                        var boundary = ae.GetBytes($"\r\n--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: {_bufImage.Length}\r\n\r\n");
-                        await Response.Body.WriteAsync(boundary, 0, boundary.Length);
-                        await Response.Body.WriteAsync(_bufImage, 0, _bufImage.Length);
-                        await Response.Body.FlushAsync();
+                        try
+                        {
+                            var boundary = ae.GetBytes($"\r\n--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: {_bufImage.Length}\r\n\r\n");
+                            await Response.Body.WriteAsync(boundary, 0, boundary.Length, _cancellationTokenSource.Token);
+                            await Response.Body.WriteAsync(_bufImage, 0, _bufImage.Length, _cancellationTokenSource.Token);
+                            await Response.Body.FlushAsync(_cancellationTokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            break;
+                        }
                     }
-                    await Task.Delay(50);
+                    await Task.Delay(50, _cancellationTokenSource.Token);
                 }
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception)
             {
-                //если клиент оффнулся
             }
         }
 
         private void VideoSourceNewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
-            using (var ms = new MemoryStream())
+            if (_isStopping) return;
+
+            try
             {
-                eventArgs.Frame.Save(ms, ImageFormat.Jpeg);
-                _bufImage = ms.ToArray();
+                using (var ms = new MemoryStream())
+                {
+                    eventArgs.Frame.Save(ms, ImageFormat.Jpeg);
+                    var newImage = ms.ToArray();
+                    Interlocked.Exchange(ref _bufImage, newImage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Frame error: {ex.Message}");
             }
         }
     }

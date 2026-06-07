@@ -2,6 +2,6 @@
 {
     public class MockRules
     {
-        public string rules = "Со всеми правилами нашего ЖК вы можете ознакомиться в чате дома";
+        public static string rules = "Со всеми правилами нашего ЖК вы можете ознакомиться в чате дома";
     }
 }

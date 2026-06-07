@@ -1,4 +1,5 @@
 ﻿@using WebGitPush.ViewModels
+@using WebGitPush.Mocks
 @model VMIndex
 
 @{
@@ -26,7 +27,7 @@
                                 <img src="@news.images[0]" alt="@news.title" class="news-image" />
                             }
                             <div class="news-content">
-                                <h3 class="news-title">@news.title</h3>
+                                <h2 class="news-title">@news.title</h2>
                                 <div class="news-text">
                                     @Html.Raw(news.text)
                                 </div>
@@ -104,20 +105,20 @@
         </div>
 
         <div class="info-card">
-            <h3>Правила ЖК</h3>
-            <p>Со всеми правилами нашего ЖК вы можете ознакомиться в чате дома</p>
+            <h2 class="section-title">Правила ЖК</h2>
+            <p> @MockRules.rules</p>
         </div>
 
         <div class="info-card">
-            <h3>График вывоза мусора</h3>
-            <p>Пн, Ср, Пт — 08:00<br>Сб — 10:00</p>
+            <h2 class="section-title">График вывоза мусора</h2>
+            <p>@MockTimesheet.timesheep</p>
         </div>
     </div>
 
 
     <div class="contacts-block">
         <h3>Контакты аварийной службы</h3>
-        <p>8 (800) 555-35-35</p>
+        <p>@MockContact.contact</p>
     </div>
 </div>
 

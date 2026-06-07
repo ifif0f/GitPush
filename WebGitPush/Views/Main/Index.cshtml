@@ -3,34 +3,37 @@
     ViewBag.Title = "Главная";
 }
 
-<div>
-    <a href="/Window1">Телевизор_1</a>
-</div>
+<div class="management-page">
+    <h1>Управленческая компания</h1>
 
-<h2>Моя видеокамера</h2>
+    <h2 class="main-title">Выбор экранов</h2>
+    <div class="management-buttons">
+        <a href="/Window1"><button class="management-btn" type="button">Экран_1</button></a>
+    </div>
 
-@if (!ViewBag.IsRunning)
-{
-    <form method="post" action="/Main/StartCamera">
-        <label>Список камер:</label>
-        <select name="deviceName">
-            @if (ViewBag.DeviceList != null)
-            {
-                @foreach (var item in ViewBag.DeviceList)
+    <h2 class="main-title">Доступ к видеокамерам</h2>
+
+    @if (!ViewBag.IsRunning)
+    {
+        <form method="post" action="/Main/StartCamera" class="management-form">
+            <label class="management-label">Список камер:</label>
+            <select name="deviceName" class="management-select">
+                @if (ViewBag.DeviceList != null)
                 {
-                    <option value="@item.Value">@item.Text</option>
+                    @foreach (var item in ViewBag.DeviceList)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
                 }
-            }
-        </select>
-        <br />
-        <input type="submit" value="Начать показ" />
-    </form>
-}
-else
-{
-    <form method="post" action="/Main/StopCamera">
-        <input type="submit" value="Остановить показ" />
-    </form>
-    <br />
-    <img src="/Main/Video" />
-}
+            </select>
+            <input type="submit" value="Начать показ" class="management-submit" />
+        </form>
+    }
+    else
+    {
+        <form method="post" action="/Main/StopCamera" class="management-form">
+            <input type="submit" value="Остановить показ" class="management-submit-stop" />
+        </form>
+        <img src="/Main/Video" class="management-video" />
+    }
+</div>
